@@ -2,7 +2,6 @@
 	single linked list merge
 	This problem requires you to merge two ordered singly linked lists into one ordered singly linked list
 */
-// I AM NOT DONE
 
 use std::fmt::{self, Display, Formatter};
 use std::ptr::NonNull;
@@ -70,12 +69,58 @@ impl<T> LinkedList<T> {
         }
     }
 	pub fn merge(list_a:LinkedList<T>,list_b:LinkedList<T>) -> Self
+    where
+    T: Ord,
 	{
-		//TODO
-		Self {
-            length: 0,
-            start: None,
-            end: None,
+		if list_a.start.is_none(){
+            return list_b;
+        }
+        if list_b.start.is_none(){
+            return list_a;
+        }
+
+        let total_length = list_a.length + list_b.length;
+        let mut a = list_a.start;
+        let mut b = list_b.start;
+        let mut head: Option<NonNull<Node<T>>> = None;
+        let mut tail: Option<NonNull<Node<T>>> = None;
+        while let (Some(a_ptr), Some(b_ptr)) = (a, b) {
+            let min;
+            unsafe{
+                min = if (*a_ptr.as_ptr()).val <= (*b_ptr.as_ptr()).val { 
+                    a = (*a_ptr.as_ptr()).next;
+                    a_ptr 
+                } else { 
+                    b = (*b_ptr.as_ptr()).next;
+                    b_ptr 
+                };
+            }
+
+            match tail {
+                None => {
+                    head = Some(min);
+                },
+                Some(mut tail_ptr) => unsafe { 
+                    (tail_ptr.as_mut()).next = Some(min);
+                },
+            }
+            tail = Some(min);
+        }
+
+        unsafe {
+            if a.is_some() {
+                (*tail.unwrap().as_ptr()).next = a;
+                // 更新尾指针为剩余链表的最后一个节点
+                tail = list_a.end;
+            } else if b.is_some() {
+                (*tail.unwrap().as_ptr()).next = b;
+                tail = list_b.end;
+            }
+        }
+        Self {
+            length: total_length,
+            start: head,
+            end: tail,
         }
 	}
 }
